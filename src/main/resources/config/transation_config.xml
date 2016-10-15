@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- 事务相关配置 -->
+	<bean name="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="mySessionFactory"></property>
+	</bean>
+	
+	 <!-- 
+     	声明事务策略通知 
+     2)	常见事务属性：
+	REQUIRED :支持当前的事务，如果不存在就创建一个新的。这是最常用的选择。
+	SUPPORTS :支持当前的事务，如果不存在就不使用事务。
+	MANDATORY :支持当前的事务，如果不存在就抛出异常。
+	REQUIRES_NEW :创建一个新的事务，并暂停当前的事务（如果存在）。
+	NOT_SUPPORTED :不使用事务，并暂停当前的事务（如果存在）。
+	NEVER :不使用事务，如果当前存在事务就抛出异常。
+	NESTED:如果当前存在事务就作为嵌入事务执行，否则与PROPAGATION_REQUIRED类似。
+	readOnly：表示该方法是只读的，而不能更新数据库里的数据
+     -->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="delete*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.Exception" no-rollback-for="java.lang.RuntimeException" />
+			<tx:method name="insert*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.RuntimeException" />
+			<tx:method name="save*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.RuntimeException" />
+			<tx:method name="add*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.RuntimeException" />
+			<tx:method name="update*" propagation="REQUIRED" read-only="false"
+				rollback-for="java.lang.Exception" />
+			<tx:method name="find*" propagation="REQUIRED" />
+			<tx:method name="get*" propagation="REQUIRED" />
+			<tx:method name="select*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="pc"
+			expression="execution(public * com.alittlebao.blog.core.service..*(..))" /> <!--把事务控制在Service层 -->
+		<aop:advisor pointcut-ref="pc" advice-ref="txAdvice" />
+	</aop:config>
+
+</beans>
